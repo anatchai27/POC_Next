@@ -168,4 +168,49 @@ describe('todoStore', () => {
     expect(deleted).toBe(true);
     expect(listTodos().length).toBe(0);
   });
+
+  test('update only completed flag preserves title', () => {
+    const todo = addTodo({ title: 'KeepTitle' });
+    const beforeTitle = todo.title;
+    const updated = updateTodo({ id: todo.id, completed: true });
+    expect(updated).toBeDefined();
+    expect(updated!.title).toBe(beforeTitle);
+    expect(updated!.completed).toBe(true);
+  });
+
+  test('toggle twice returns to original completed state', () => {
+    const todo = addTodo({ title: 'DoubleToggle' });
+    expect(todo.completed).toBe(false);
+    toggleTodo(todo.id);
+    const afterOne = getTodo(todo.id)!;
+    expect(afterOne.completed).toBe(true);
+    toggleTodo(todo.id);
+    const afterTwo = getTodo(todo.id)!;
+    expect(afterTwo.completed).toBe(false);
+  });
+
+  test('update trims title input', () => {
+    const todo = addTodo({ title: '   spaced   ' });
+    const updated = updateTodo({ id: todo.id, title: '  trimmed  ' });
+    expect(updated).toBeDefined();
+    expect(updated!.title).toBe('trimmed');
+  });
+
+  test('createdAt remains unchanged after update', () => {
+    const todo = addTodo({ title: 'ImmutableCreated' });
+    const created = todo.createdAt;
+    const updated = updateTodo({ id: todo.id, title: 'Changed' });
+    expect(updated).toBeDefined();
+    expect(updated!.createdAt).toBe(created);
+  });
+
+  test('add generates unique ids for multiple todos', () => {
+    clearTodos();
+    const a = addTodo({ title: 'A' });
+    const b = addTodo({ title: 'B' });
+    expect(a.id).not.toBe(b.id);
+    // also ensure list contains both
+    const list = listTodos();
+    expect(list.map(t => t.id)).toEqual([a.id, b.id]);
+  });
 });
